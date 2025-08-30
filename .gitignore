@@ -1,0 +1,35 @@
+# 编译产物
+*.o
+main
+
+# 临时文件
+*.swp
+*~
+.DS_Store
+
+# 日志文件
+*.log
+
+# 调试信息
+core
+*.core
+
+# IDE配置文件
+.vscode/
+.idea/
+*.project
+*.cproject
+*.settings/
+
+# 构建目录
+build/
+cmake-build-*/
+
+# 操作系统文件
+Thumbs.db
+.DS_Store
+
+# 其他临时文件
+*.tmp
+*.temp
+.cache/

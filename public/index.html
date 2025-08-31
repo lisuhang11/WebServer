@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebFileServer - 测试中心</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>WebFileServer</h1>
+        <p>高性能HTTP静态资源服务器 - 测试中心</p>
+    </header>
+    
+    <main>
+        <section>
+            <h2>欢迎使用WebServer测试中心</h2>
+            <p>这是一个基于C++11开发的高性能HTTP服务器，支持静态资源服务和动态内容生成。通过以下测试工具，您可以全面测试服务器的各项功能。</p>
+        </section>
+        
+        <section>
+            <h3>功能特性</h3>
+            <ul>
+                <li>静态资源服务（HTML、CSS、JavaScript、图片等）</li>
+                <li>支持文件路径映射</li>
+                <li>MIME类型自动识别</li>
+                <li>动态内容生成（支持表单提交和API请求）</li>
+                <li>跨域资源共享(CORS)支持</li>
+                <li>请求日志记录</li>
+            </ul>
+        </section>
+        
+        <!-- 测试导航 -->
+        <section>
+            <h3>测试导航</h3>
+            <div class="test-nav">
+                <button class="nav-btn active" data-target="form-test">表单测试</button>
+                <button class="nav-btn" data-target="api-test">API测试</button>
+                <button class="nav-btn" data-target="performance">性能测试</button>
+            </div>
+        </section>
+        
+        <!-- 表单测试 -->
+        <section id="form-test" class="test-section">
+            <h3>表单测试</h3>
+            <form id="submit-form" action="/api/submit" method="POST">
+                <div>
+                    <label for="name">姓名：</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div>
+                    <label for="email">邮箱：</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div>
+                    <label for="message">留言：</label>
+                    <textarea id="message" name="message" rows="4"></textarea>
+                </div>
+                <div>
+                    <input type="submit" value="提交" class="btn-primary">
+                </div>
+            </form>
+            <div id="form-result" class="result-box hidden"></div>
+        </section>
+        
+        <!-- API测试 -->
+        <section id="api-test" class="test-section hidden">
+            <h3>API测试工具</h3>
+            <div class="api-test-container">
+                <div class="api-controls">
+                    <div>
+                        <label for="api-method">方法：</label>
+                        <select id="api-method">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="api-endpoint">端点：</label>
+                        <input type="text" id="api-endpoint" value="/api/test" placeholder="输入API端点">
+                    </div>
+                    <div class="api-headers">
+                        <label for="api-headers-text">请求头：</label>
+                        <textarea id="api-headers-text" rows="3" placeholder='例如: {"Content-Type": "application/json"}'>{"Content-Type": "application/json"}</textarea>
+                    </div>
+                    <div class="api-body">
+                        <label for="api-body-text">请求体：</label>
+                        <textarea id="api-body-text" rows="5" placeholder='例如: {"key": "value"}'></textarea>
+                    </div>
+                    <div>
+                        <button id="api-send-btn" class="btn-primary">发送请求</button>
+                    </div>
+                </div>
+                <div class="api-results">
+                    <div class="response-header">
+                        <span>状态码:</span> <span id="response-status">-</span>
+                    </div>
+                    <div class="response-content">
+                        <pre id="response-body">// 响应将显示在这里</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 性能测试 -->
+        <section id="performance" class="test-section hidden">
+            <h3>性能测试</h3>
+            <div class="performance-controls">
+                <div>
+                    <label for="test-url">测试URL：</label>
+                    <input type="text" id="test-url" value="/index.html" placeholder="输入测试URL">
+                </div>
+                <div>
+                    <label for="request-count">请求次数：</label>
+                    <input type="number" id="request-count" value="10" min="1" max="1000">
+                </div>
+                <div>
+                    <label for="concurrency">并发数：</label>
+                    <input type="number" id="concurrency" value="5" min="1" max="100">
+                </div>
+                <div>
+                    <button id="start-performance-test" class="btn-primary">开始测试</button>
+                </div>
+            </div>
+            <div id="performance-results" class="result-box hidden">
+                <h4>性能测试结果：</h4>
+                <div class="performance-stats">
+                    <div><strong>总请求数：</strong> <span id="total-requests">-</span></div>
+                    <div><strong>成功请求：</strong> <span id="successful-requests">-</span></div>
+                    <div><strong>失败请求：</strong> <span id="failed-requests">-</span></div>
+                    <div><strong>平均响应时间：</strong> <span id="avg-response-time">-</span> ms</div>
+                    <div><strong>最小响应时间：</strong> <span id="min-response-time">-</span> ms</div>
+                    <div><strong>最大响应时间：</strong> <span id="max-response-time">-</span> ms</div>
+                    <div><strong>吞吐量：</strong> <span id="throughput">-</span> 请求/秒</div>
+                </div>
+                <div class="performance-chart">
+                    <canvas id="response-time-chart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2024 WebFileServer. All rights reserved.</p>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

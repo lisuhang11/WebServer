@@ -71,6 +71,15 @@ private:
     // 生成响应相关方法
     void generateResponse();
     void generateErrorResponse(int statusCode, const std::string &message);
+    
+    // 文件处理相关方法
+    bool readFile(const std::string& filePath, std::string& content);
+    bool handleStaticFile();
+    bool handleApiRequest();
+    
+    // 辅助方法
+    bool getFileExtension(const std::string& path, std::string& extension);
+    std::string getMimeType(const std::string& extension);
 
     int sockfd_;                             // 套接字描述符
     struct sockaddr_in addr_;                // 地址信息

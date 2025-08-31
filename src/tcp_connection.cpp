@@ -181,20 +181,14 @@ void TcpConnection::handleRead() {
         // 读取数据到输入缓冲区
         inputBuffer_.append(buf, n);
         
-        // 打印收到的请求（用于调试）
-        printf("收到请求: %s\n", inputBuffer_.c_str());
+        // 创建HTTP连接对象并处理请求
+        HttpConnection httpConn(channel_->fd());
+        httpConn.appendBuffer(inputBuffer_);
         
-        // 构建正确的HTTP响应
-        std::string body = "Hello from WebFileServer!\n"; // 响应正文
-        std::string response = 
-            "HTTP/1.1 200 OK\r\n" 
-            "Content-Type: text/plain\r\n" 
-            "Content-Length: " + std::to_string(body.size()) + "\r\n" 
-            "Connection: close\r\n" 
-            "\r\n" 
-            + body;
-            
-        send(response);
+        if (httpConn.process()) {
+            // 发送HTTP响应
+            send(httpConn.getResponse());
+        }
         
         // 发送完响应后关闭连接
         shutdown();

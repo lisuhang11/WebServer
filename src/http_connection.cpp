@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <vector>
 #include <string>
+#include "timestamp.h"
 
 // 构造函数
 HttpConnection::HttpConnection(int sockfd)
@@ -199,81 +200,201 @@ bool HttpConnection::parseBody(const std::string &body) {
     return true;
 }
 
+// 获取MIME类型
+bool HttpConnection::getFileExtension(const std::string& path, std::string& extension) {
+    size_t dotPos = path.find_last_of('.');
+    if (dotPos == std::string::npos || dotPos == path.size() - 1) {
+        return false;
+    }
+    extension = path.substr(dotPos + 1);
+    return true;
+}
+
+// 获取MIME类型
+std::string HttpConnection::getMimeType(const std::string& extension) {
+    if (extension == "html" || extension == "htm") return "text/html; charset=utf-8";
+    if (extension == "css") return "text/css; charset=utf-8";
+    if (extension == "js") return "application/javascript; charset=utf-8";
+    if (extension == "json") return "application/json; charset=utf-8";
+    if (extension == "png") return "image/png";
+    if (extension == "jpg" || extension == "jpeg") return "image/jpeg";
+    if (extension == "gif") return "image/gif";
+    if (extension == "svg") return "image/svg+xml";
+    if (extension == "pdf") return "application/pdf";
+    if (extension == "txt") return "text/plain; charset=utf-8";
+    if (extension == "xml") return "application/xml";
+    if (extension == "zip") return "application/zip";
+    if (extension == "mp3") return "audio/mpeg";
+    if (extension == "mp4") return "video/mp4";
+    // 默认MIME类型
+    return "application/octet-stream";
+}
+
+// 读取文件内容
+bool HttpConnection::readFile(const std::string& filePath, std::string& content) {
+    FILE* file = fopen(filePath.c_str(), "rb");
+    if (!file) {
+        return false;
+    }
+    
+    // 获取文件大小
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    
+    // 读取文件内容
+    content.resize(fileSize);
+    size_t bytesRead = fread(&content[0], 1, fileSize, file);
+    fclose(file);
+    
+    return bytesRead == fileSize;
+}
+
+// 处理静态文件请求
+bool HttpConnection::handleStaticFile() {
+    // 文件路径映射 - 将URI映射到服务器本地文件系统路径
+    std::string filePath = "/home/WebFileServer/public";
+    
+    if (path_ == "/") {
+        filePath += "/index.html";
+    } else {
+        filePath += path_;
+    }
+    
+    // 检查文件是否存在并可读
+    std::string fileContent;
+    if (!readFile(filePath, fileContent)) {
+        return false;
+    }
+    
+    // 获取文件扩展名和MIME类型
+    std::string extension;
+    std::string mimeType = "application/octet-stream";
+    if (getFileExtension(filePath, extension)) {
+        mimeType = getMimeType(extension);
+    }
+    
+    // 生成响应
+    responseHeader_ = "HTTP/1.1 200 OK\r\n";
+    responseHeader_ += "Content-Type: " + mimeType + "\r\n";
+    responseHeader_ += "Content-Length: " + std::to_string(fileContent.size()) + "\r\n";
+    responseHeader_ += "Connection: keep-alive\r\n";
+    responseHeader_ += "\r\n";
+    responseHeader_ += fileContent;
+    
+    return true;
+}
+
+// 处理API请求
+bool HttpConnection::handleApiRequest() {
+    // 处理表单提交
+    if (path_ == "/api/submit" && method_ == HttpMethod::POST) {
+        // 解析表单数据
+        std::unordered_map<std::string, std::string> formData;
+        
+        // 假设表单数据是x-www-form-urlencoded格式
+        size_t start = 0;
+        size_t end = 0;
+        while ((end = body_.find('&', start)) != std::string::npos) {
+            std::string param = body_.substr(start, end - start);
+            size_t eqPos = param.find('=');
+            if (eqPos != std::string::npos) {
+                std::string key = param.substr(0, eqPos);
+                std::string value = param.substr(eqPos + 1);
+                formData[key] = value;
+            }
+            start = end + 1;
+        }
+        // 处理最后一个参数
+        std::string param = body_.substr(start);
+        size_t eqPos = param.find('=');
+        if (eqPos != std::string::npos) {
+            std::string key = param.substr(0, eqPos);
+            std::string value = param.substr(eqPos + 1);
+            formData[key] = value;
+        }
+        
+        // 生成JSON响应
+        std::string jsonResponse = "{";
+        jsonResponse += "\"status\": \"success\",";
+        jsonResponse += "\"message\": \"表单提交成功\",";
+        jsonResponse += "\"data\": {";
+        
+        bool first = true;
+        for (const auto& pair : formData) {
+            if (!first) jsonResponse += ",";
+            jsonResponse += "\"" + pair.first + "\": \"" + pair.second + "\"";
+            first = false;
+        }
+        
+        jsonResponse += "}}";
+        
+        responseHeader_ = "HTTP/1.1 200 OK\r\n";
+        responseHeader_ += "Content-Type: application/json; charset=utf-8\r\n";
+        responseHeader_ += "Content-Length: " + std::to_string(jsonResponse.size()) + "\r\n";
+        responseHeader_ += "Connection: keep-alive\r\n";
+        responseHeader_ += "\r\n";
+        responseHeader_ += jsonResponse;
+        
+        return true;
+    }
+    
+    // 处理其他API请求
+    else if (path_.substr(0, 5) == "/api/") {
+        std::string jsonResponse;
+        
+        // 特定处理/api/test端点
+        if (path_ == "/api/test") {
+            jsonResponse = "{";
+            jsonResponse += "\"status\": \"success\",";
+            jsonResponse += "\"message\": \"API测试成功\",";
+            jsonResponse += "\"server_info\": {";
+            jsonResponse += "\"name\": \"WebFileServer\",";
+            jsonResponse += "\"version\": \"1.0.0\",";
+            jsonResponse += "\"time\": \"" + Timestamp::now().toString() + "\"";
+            jsonResponse += "}}";
+        }
+        // 返回API帮助信息
+        else {
+            jsonResponse = "{";
+            jsonResponse += "\"status\": \"success\",";
+            jsonResponse += "\"message\": \"WebFileServer API\",";
+            jsonResponse += "\"available_endpoints\": [";
+            jsonResponse += "{\"path\": \"/api/submit\", \"method\": \"POST\", \"description\": \"处理表单提交\"},";
+            jsonResponse += "{\"path\": \"/api/test\", \"method\": \"GET\", \"description\": \"API测试端点\"}]";
+            jsonResponse += "}";
+        }
+        
+        responseHeader_ = "HTTP/1.1 200 OK\r\n";
+        responseHeader_ += "Content-Type: application/json; charset=utf-8\r\n";
+        responseHeader_ += "Content-Length: " + std::to_string(jsonResponse.size()) + "\r\n";
+        responseHeader_ += "Connection: keep-alive\r\n";
+        responseHeader_ += "\r\n";
+        responseHeader_ += jsonResponse;
+        
+        return true;
+    }
+
+    return false;
+}
+
 // 生成HTTP响应
 void HttpConnection::generateResponse() {
     // 清空响应头
     responseHeader_.clear();
     
-    // 根据路径处理不同的请求
-    if (path_ == "/" || path_ == "/index.html") {
-        // 返回简单的欢迎页面
-        std::string html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>HTTP Server</title></head><body>";
-        html += "<h1>Welcome to HTTP Server</h1>";
-        html += "<p>This is a simple HTTP server based on Reactor pattern.</p>";
-        html += "<p>Current path: " + path_ + "</p>";
-        html += "</body></html>";
-        
-        responseHeader_ = "HTTP/1.1 200 OK\r\n";
-        responseHeader_ += "Content-Type: text/html; charset=utf-8\r\n";
-        responseHeader_ += "Content-Length: " + std::to_string(html.size()) + "\r\n";
-        responseHeader_ += "Connection: keep-alive\r\n";
-        responseHeader_ += "\r\n";
-        responseHeader_ += html;
-    } else {
-        // 返回当前路径信息的简单页面
-        std::string html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>HTTP Server</title></head><body>";
-        html += "<h1>Path: " + path_ + "</h1>";
-        html += "<p>Method: ";
-        
-        switch (method_) {
-            case HttpMethod::GET: html += "GET";
-break;
-            case HttpMethod::POST: html += "POST";
-break;
-            case HttpMethod::HEAD: html += "HEAD";
-break;
-            case HttpMethod::PUT: html += "PUT";
-break;
-            case HttpMethod::DELETE: html += "DELETE";
-break;
-            default: html += "Unknown";
-break;
-        }
-        
-        html += "</p>";
-        
-        // 添加请求头信息
-        if (!headers_.empty()) {
-            html += "<h2>Headers:</h2><ul>";
-            for (const auto& header : headers_) {
-                html += "<li>" + header.first + ": " + header.second + "</li>";
-            }
-            html += "</ul>";
-        }
-        
-        // 添加查询参数信息
-        if (!queryParams_.empty()) {
-            html += "<h2>Query Parameters:</h2><ul>";
-            for (const auto& param : queryParams_) {
-                html += "<li>" + param.first + "=" + param.second + "</li>";
-            }
-            html += "</ul>";
-        }
-        
-        // 添加请求体信息
-        if (!body_.empty()) {
-            html += "<h2>Request Body:</h2><pre>" + body_ + "</pre>";
-        }
-        
-        html += "</body></html>";
-        
-        responseHeader_ = "HTTP/1.1 200 OK\r\n";
-        responseHeader_ += "Content-Type: text/html; charset=utf-8\r\n";
-        responseHeader_ += "Content-Length: " + std::to_string(html.size()) + "\r\n";
-        responseHeader_ += "Connection: keep-alive\r\n";
-        responseHeader_ += "\r\n";
-        responseHeader_ += html;
+    // 首先尝试处理API请求
+    if (handleApiRequest()) {
+        return;
     }
+    
+    // 然后尝试处理静态文件请求
+    if (handleStaticFile()) {
+        return;
+    }
+    
+    // 如果都不是，返回404错误
+    generateErrorResponse(404, "Not Found");
 }
 
 // 生成错误响应

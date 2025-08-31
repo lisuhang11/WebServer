@@ -2,11 +2,14 @@
 
 # 编译器设置
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra -g -O2
+CXXFLAGS = -std=c++11 -Wall -Wextra -g -O2 -I$(INCLUDE_DIR)
 LDFLAGS = -lpthread
 
 # 定义源文件和目标文件
-SRCS = main.cpp http_connection.cpp utils.cpp event_loop.cpp channel.cpp epoller.cpp inet_address.cpp socket.cpp tcp_connection.cpp event_loop_thread_pool.cpp acceptor.cpp tcp_server.cpp timestamp.cpp
+SRC_DIR = src
+INCLUDE_DIR = include
+VPATH = $(SRC_DIR)
+SRCS = $(notdir $(wildcard $(SRC_DIR)/*.cpp))
 OBJS = $(SRCS:.cpp=.o)
 TARGET = main
 

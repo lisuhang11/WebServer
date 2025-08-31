@@ -1,0 +1,28 @@
+{
+    "status": "success",
+    "message": "这是一个测试JSON数据文件",
+    "timestamp": "2023-06-15T12:30:45Z",
+    "data": {
+        "user": {
+            "id": 123,
+            "name": "测试用户",
+            "email": "test@example.com"
+        },
+        "features": [
+            "静态文件服务",
+            "动态API响应",
+            "多线程处理",
+            "事件驱动架构"
+        ],
+        "server_info": {
+            "version": "1.0.0",
+            "name": "WebFileServer",
+            "powered_by": "C++"
+        }
+    },
+    "meta": {
+        "total_items": 42,
+        "page": 1,
+        "per_page": 10
+    }
+}

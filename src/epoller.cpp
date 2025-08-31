@@ -51,21 +51,35 @@ void Epoller::updateChannel(Channel* channel) {
     
     if (index == -1) {
         // 新Channel，添加到epoll
-        assert(channels_.find(fd) == channels_.end());
+        // 检查是否已经存在该fd，如果存在则先删除它（处理fd重用的情况）
+        auto it = channels_.find(fd);
+        if (it != channels_.end()) {
+            // 确保旧的channel已经被正确删除
+            if (it->second != channel) {
+                // 先从epoll中删除旧的channel
+                update(EPOLL_CTL_DEL, it->second);
+                channels_.erase(it);
+            }
+        }
+        
         channels_[fd] = channel;
         channel->set_index(0);
         update(EPOLL_CTL_ADD, channel);
     } else {
         // 已存在的Channel，更新事件
-        assert(channels_.find(fd) != channels_.end());
-        assert(channels_[fd] == channel);
-        if (channel->isNoneEvent()) {
-            // 如果没有关注的事件，从epoll中删除
-            update(EPOLL_CTL_DEL, channel);
-            channel->set_index(-1);
+        auto it = channels_.find(fd);
+        if (it != channels_.end() && it->second == channel) {
+            if (channel->isNoneEvent()) {
+                // 如果没有关注的事件，从epoll中删除
+                update(EPOLL_CTL_DEL, channel);
+                channel->set_index(-1);
+            } else {
+                // 更新事件
+                update(EPOLL_CTL_MOD, channel);
+            }
         } else {
-            // 更新事件
-            update(EPOLL_CTL_MOD, channel);
+            // 如果channel不匹配，记录错误但不中断程序
+            std::cerr << "Warning: Channel mismatch or not found for fd: " << fd << std::endl;
         }
     }
 }

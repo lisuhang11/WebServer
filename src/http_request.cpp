@@ -86,7 +86,7 @@ bool HttpRequest::parse(const std::shared_ptr<Buffer>& buffer) {
 }
 
 bool HttpRequest::parseRequestLine(const std::string& line) {
-    std::regex pattern("(GET|POST|PUT|DELETE)\s+([^\s]+)\s+(HTTP/\d\.\d)");
+    std::regex pattern("(GET|POST|PUT|DELETE)\\s+([^\\s]+)\\s+(HTTP/\\d\\.\\d)");
     std::smatch result;
 
     if (std::regex_match(line, result, pattern)) {
@@ -112,7 +112,7 @@ bool HttpRequest::parseRequestLine(const std::string& line) {
 }
 
 bool HttpRequest::parseHeaders(const std::string& line) {
-    std::regex pattern("([^:]+):\s*(.+)");
+    std::regex pattern("([^:]+):\\s*(.+)");
     std::smatch result;
 
     if (std::regex_match(line, result, pattern)) {

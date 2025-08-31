@@ -9,6 +9,8 @@ class Buffer {
 public:
     static const size_t kCheapPrepend = 8;
     static const size_t kInitialSize = 1024;
+    static const char kCRLF[]; // "\r\n"
+
 
     explicit Buffer(size_t initialSize = kInitialSize)
         : buffer_(kCheapPrepend + initialSize),
@@ -153,8 +155,6 @@ private:
     std::vector<char> buffer_;
     size_t readerIndex_;
     size_t writerIndex_;
-
-    static const char kCRLF[]; // "\r\n"
 };
 
 #endif // BUFFER_H

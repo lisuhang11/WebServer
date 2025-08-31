@@ -210,7 +210,7 @@ void Server::handleNewConnection() {
         // 添加到epoll
         if (epoll_->addFd(clientFd, EPOLLIN | EPOLLET | EPOLLRDHUP)) {
             // 创建HTTP连接对象
-            connections_[clientFd].reset(new HttpConnection(clientFd, rootPath_));
+            connections_[clientFd].reset(new HttpConnection(clientFd));
             std::cout << "New connection from " << inet_ntoa(clientAddr.sin_addr) 
                       << ":" << ntohs(clientAddr.sin_port) << std::endl;
         } else {

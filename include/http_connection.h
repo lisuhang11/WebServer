@@ -57,6 +57,9 @@ public:
     
     // 追加缓冲区数据
     void appendBuffer(const std::string& data) { readBuffer_ += data; }
+    
+    // 是否正在处理
+    bool isProcessing() const { return isProcessing_; }
 
 private:
     // 解析请求相关方法

@@ -1,6 +1,6 @@
 # WebServer
 
-WebFileServer 是一款基于 Linux 环境开发的轻量级 HTTP 服务器，采用 C++11 语言实现。该服务器提供基本的 HTTP 请求处理能力，支持多线程并发，采用 Reactor 事件处理模型和 I/O 复用技术（epoll）实现高效的网络通信。
+WebServer 是一款基于 Linux 环境开发的轻量级 HTTP 服务器，采用 C++11 语言实现。该服务器提供基本的 HTTP 请求处理能力，支持多线程并发，采用 Reactor 事件处理模型和 I/O 复用技术（epoll）实现高效的网络通信。
 
 ## 功能特性
 
@@ -37,7 +37,7 @@ WebFileServer 是一款基于 Linux 环境开发的轻量级 HTTP 服务器，�
 
 1. 进入项目目录
 ```bash
-cd WebFileServer
+cd WebServer
 ```
 
 2. 执行编译命令
